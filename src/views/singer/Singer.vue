@@ -1,12 +1,36 @@
 <template>
-  <div class="singer">
-    <h2>歌手页</h2>
-  </div>
+  <div class="singer"></div>
 </template>
 
 <script>
-export default {};
+import { getSingerList } from "api/singer";
+import { ERR_OK } from "api/config.js";
+
+export default {
+  data() {
+    return {
+      singerList: [],
+    };
+  },
+  created() {
+    this._getSingerList();
+  },
+  methods: {
+    async _getSingerList() {
+      let res = await getSingerList();
+      if (res.code === ERR_OK) {
+        console.log(res);
+      }
+    },
+  },
+};
 </script>
 
-<style>
+<style lang="stylus" scoped>
+.singer {
+  position: fixed;
+  top: 88px;
+  bottom: 0;
+  width: 100%;
+}
 </style>
