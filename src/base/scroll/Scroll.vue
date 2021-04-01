@@ -34,9 +34,20 @@ export default {
         probeType: this.probeType,
         click: this.click,
       });
+      // 是否派发滚动事件
+      if (this.probeType !== 0) {
+        const vm = this;
+        this.scroll.on("scroll", (pos) => [vm.$emit("scroll", pos)]);
+      }
     },
     refresh() {
       this.scroll && this.scroll.refresh();
+    },
+    scrollTo(...args) {
+      this.scroll && this.scroll.scrollTo(...args);
+    },
+    scrollToElement(...args) {
+      this.scroll && this.scroll.scrollToElement(...args);
     },
   },
   watch: {
