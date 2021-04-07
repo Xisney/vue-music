@@ -4,7 +4,7 @@
     class="listview"
     ref="scroll"
     @scroll="onScroll"
-    :probeType="3"
+    :probe-type="3"
   >
     <ul class="list-group">
       <li v-for="item in data" :key="item.title" ref="listGroup">
@@ -14,6 +14,7 @@
             class="list-group-item"
             v-for="singer in item.items"
             :key="singer.id"
+            @click="onSelect(singer)"
           >
             <img v-lazy="singer.avatar" alt="avatar" class="avatar" />
             <p class="name">{{ singer.name }}</p>
@@ -59,11 +60,6 @@ export default {
     // 在此处存储touches，不必加入响应式系统
     this.touches = {};
   },
-  mounted() {
-    this.$nextTick(function () {
-      this._calcListGroupHeight();
-    });
-  },
   props: {
     data: {
       type: Array,
@@ -90,13 +86,22 @@ export default {
       });
     },
     fixedTitle() {
-      const temp = this.data[this.curIndex].title;
-      return temp ? temp : "";
+      if (this.data.length !== 0) {
+        const temp = this.data[this.curIndex].title;
+        return temp ? temp : "";
+      }
+      return "";
     },
   },
   watch: {
     data() {
-      this._calcListGroupHeight();
+      // 这里使用nextTick进行监听数据，刷新高度
+      // $refs并非响应式的api，只会记录初始状态，并且data没有变化之后就不会调用此方法
+      // 故而使用此api使得组件渲染完毕，再去获取dom元素
+      // 数据变化并不代表着立即呈现为dom元素！！！
+      this.$nextTick(() => {
+        this._calcListGroupHeight();
+      });
     },
     diff(newValue) {
       let fixedTop =
@@ -122,6 +127,9 @@ export default {
       let detalIndex = ((y2 - this.y1) / ANCHOR_HEIGHT) | 0;
       this._scrollToElement(parseInt(this.anchorIndex) + detalIndex);
     },
+    onSelect(singer) {
+      this.$emit("select", singer);
+    },
     onScroll(e) {
       this.scrollY = -e.y;
       const y = -e.y;
@@ -139,6 +147,7 @@ export default {
       }
       // 处理边界，最后一个的情况
       this.curIndex = listHeight.length - 2;
+      this.diff = -1;
     },
     _calcListGroupHeight() {
       this.listHeight = [];

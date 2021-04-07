@@ -1,40 +1,48 @@
 import Vue from "vue";
 import Router from "vue-router";
 
-Vue.use(Router)
+Vue.use(Router);
 
 // 导入组件
-const Recommend = ()=>import("views/recommend/Recommend")
-const Rank = ()=>import("views/rank/Rank")
-const Singer = ()=>import("views/singer/Singer") 
-const Search = ()=>import("views/search/Search")
+const Recommend = () => import("views/recommend/Recommend");
+const Rank = () => import("views/rank/Rank");
+const Singer = () => import("views/singer/Singer");
+const Search = () => import("views/search/Search");
+const SingerDetail = () =>
+  import("views/singer/childCpns/singerDetail/SingerDetail");
 
-const routes=[
+const routes = [
   {
-    path:"/",
-    redirect:'/recommend'
+    path: "/",
+    redirect: "/recommend",
   },
   {
-    path:'/recommend',
-    component:Recommend
+    path: "/recommend",
+    component: Recommend,
   },
   {
-    path:'/Rank',
-    component:Rank
+    path: "/rank",
+    component: Rank,
   },
   {
-    path:'/Singer',
-    component:Singer
+    path: "/singer",
+    component: Singer,
+    children: [
+      {
+        path: ":id",
+        component: SingerDetail,
+      },
+    ],
   },
   {
-    path:'/Search',
-    component:Search
-  }
-]
+    path: "/search",
+    component: Search,
+  },
+];
 
-const router =  new Router({
+const router = new Router({
   routes,
-  mode:"history"
-})
+  mode: "history",
+});
 
-export default router
+export default router;

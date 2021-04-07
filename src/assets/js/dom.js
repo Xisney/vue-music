@@ -25,3 +25,32 @@ export function getData(el, name, val) {
     return el.getAttribute(name);
   }
 }
+
+// 添加浏览器前缀
+const prefix = (() => {
+  let curStyle = document.createElement("div").style;
+  const transformNames = {
+    webkit: "webkitTransform",
+    Moz: "MozTransform",
+    O: "OTransform",
+    ms: "msTransform",
+    standard: "transform",
+  };
+  Object.keys(transformNames).forEach((key) => {
+    if (curStyle[transformNames[key]]) {
+      return key;
+    }
+  });
+  return false;
+})();
+
+export function addPrefix(style) {
+  if (!prefix) {
+    return;
+  }
+  if (prefix === "standard") {
+    return style;
+  }
+
+  return prefix + style.charAt(0).toUpperCase() + style.substr(1);
+}
