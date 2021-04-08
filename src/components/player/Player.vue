@@ -19,7 +19,7 @@
                 <img
                   class="image"
                   :src="currentSong.image"
-                  :class="this.playing ? 'play' : 'pause'"
+                  :class="this.playing ? 'play' : 'play pause'"
                 />
               </div>
             </div>
@@ -29,17 +29,30 @@
           </div>
         </div>
         <div class="bottom">
+          <div class="progress-wrapper">
+            <span class="time time-l">{{ currentTime | formatTime }}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar
+                :percent="percent"
+                @timeChange="timeChange"
+                @timeChangeEnd="timeChangeEnd"
+              ></progress-bar>
+            </div>
+            <span class="time time-r">{{
+              currentSong.duration | formatTime
+            }}</span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
               <i class="icon-sequence"></i>
             </div>
-            <div class="icon i-left" @click="prev">
+            <div class="icon i-left" @click="prev" :class="disCls">
               <i class="icon-prev"></i>
             </div>
             <div class="icon i-center" @click="togglePlaying">
               <i :class="!this.playing ? 'icon-play' : 'icon-pause'"></i>
             </div>
-            <div class="icon i-right" @click="next">
+            <div class="icon i-right" @click="next" :class="disCls">
               <i class="icon-next"></i>
             </div>
             <div class="icon i-right">
@@ -57,7 +70,7 @@
               width="40"
               height="40"
               :src="currentSong.image"
-              :class="this.playing ? 'play' : 'pause'"
+              :class="this.playing ? 'play' : 'play pause'"
             />
           </div>
         </div>
@@ -76,12 +89,21 @@
         </div>
       </div>
     </transition>
-    <audio :src="currentSong.url" ref="audio"></audio>
+    <audio
+      :src="currentSong.url"
+      ref="audio"
+      @canplay="ready"
+      @error="error"
+      @timeupdate="onTimeUpdate"
+      @ended="end"
+    ></audio>
   </div>
 </template>
 
 <script>
 import { mapGetters, mapMutations } from "vuex";
+
+import ProgressBar from "base/progressBar/ProgressBar";
 
 export default {
   computed: {
@@ -92,6 +114,18 @@ export default {
       "playing",
       "currentIndex",
     ]),
+    disCls() {
+      return this.isSongReady ? "" : "disable";
+    },
+    percent() {
+      return this.currentTime / this.currentSong.duration;
+    },
+  },
+  data() {
+    return {
+      isSongReady: false,
+      currentTime: 0,
+    };
   },
   methods: {
     onBackClick() {
@@ -104,19 +138,42 @@ export default {
       this.setPlaying(!this.playing);
     },
     prev() {
-      const end = this.playList.length - 1;
-      if (this.currentIndex === 0) {
-        this.setCurrentIndex(end);
-      } else {
-        this.setCurrentIndex(this.currentIndex - 1);
+      if (!this.isSongReady) return;
+
+      let index = this.currentIndex - 1;
+      if (index < 0) {
+        index = this.playList.length - 1;
       }
+      this.setCurrentIndex(index);
+      this.isSongReady = false;
     },
     next() {
-      const end = this.playList.length - 1;
-      if (this.currentIndex === end) {
-        this.setCurrentIndex(0);
-      } else {
-        this.setCurrentIndex(this.currentIndex + 1);
+      if (!this.isSongReady) return;
+      let index = this.currentIndex + 1;
+      if (index === this.playList.length) {
+        index = 0;
+      }
+      this.setCurrentIndex(index);
+      this.isSongReady = false;
+    },
+    ready() {
+      this.isSongReady = true;
+    },
+    error() {
+      this.isSongReady = true;
+    },
+    end() {
+      this.togglePlaying();
+    },
+    onTimeUpdate(e) {
+      this.currentTime = e.target.currentTime;
+    },
+    timeChange(percent) {
+      this.$refs.audio.currentTime = percent * this.currentSong.duration;
+    },
+    timeChangeEnd() {
+      if (!this.playing) {
+        this.togglePlaying();
       }
     },
     ...mapMutations({
@@ -137,6 +194,17 @@ export default {
         newVal ? audio.play() : audio.pause();
       });
     },
+  },
+  filters: {
+    formatTime(time) {
+      time = time | 0;
+      const mins = (time / 60) | 0,
+        sec = (time % 60).toString().padStart(2, 0);
+      return `${mins}:${sec}`;
+    },
+  },
+  components: {
+    ProgressBar,
   },
 };
 </script>
